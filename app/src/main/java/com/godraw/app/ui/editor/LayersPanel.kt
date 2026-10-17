@@ -22,7 +22,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.SubdirectoryArrowRight
+import androidx.compose.material.icons.filled.SubdirectoryArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CreateNewFolder
 import androidx.compose.material.icons.filled.DragIndicator
@@ -297,7 +297,7 @@ private fun LayerRow(
                     }
                 },
         )
-        if (indented) Icon(Icons.AutoMirrored.Filled.SubdirectoryArrowRight, null, Modifier.size(16.dp))
+        if (indented) Icon(Icons.Filled.SubdirectoryArrowRight, null, Modifier.size(16.dp))
         Box(Modifier.size(48.dp).clip(RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
             if (layer.isGroup) {
                 Icon(Icons.Filled.Folder, null, tint = MaterialTheme.colorScheme.primary)
@@ -321,7 +321,7 @@ private fun LayerRow(
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                if (layer.clipToBelow) Icon(Icons.AutoMirrored.Filled.SubdirectoryArrowRight, stringResource(R.string.clipping_mask), Modifier.size(14.dp))
+                if (layer.clipToBelow) Icon(Icons.Filled.SubdirectoryArrowRight, stringResource(R.string.clipping_mask), Modifier.size(14.dp))
                 if (layer.hasMask) Icon(Icons.Filled.TheaterComedy, stringResource(R.string.mask), Modifier.size(14.dp))
                 if (layer.isStatic) Icon(Icons.Filled.PushPin, stringResource(R.string.static_layer), Modifier.size(14.dp))
             }
