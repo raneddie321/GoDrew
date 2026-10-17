@@ -130,26 +130,18 @@ fun DrawingEngine.duplicateLayer(id: String) {
     val after = HashMap<CellKey, CellSnapshot>()
     val before = HashMap<CellKey, CellSnapshot>()
     for (key in cellKeys(layer)) {
-        val src = store.get(key) ?: continue
         val dstKey = key.copy(layerId = copy.id)
-        val bmp = src.copy(Bitmap.Config.ARGB_8888, true)
-        // A copied background layer must keep its color as pixels.
-        if (layer.isBackground && !key.isMask && doc.backgroundColor != 0) {
-            val filled = Bitmap.createBitmap(doc.width, doc.height, Bitmap.Config.ARGB_8888)
-            filled.eraseColor(doc.backgroundColor)
-            Canvas(filled).drawBitmap(bmp, 0f, 0f, null)
-            store.set(dstKey, filled)
-        } else {
-            store.set(dstKey, bmp)
-        }
+        if (!copyCell(key, dstKey)) continue
         before[dstKey] = CellSnapshot.Empty
         after[dstKey] = snapshots.capture(dstKey)
     }
-    if (layer.isBackground && doc.backgroundColor != 0 && cellKeys(layer, includeMask = false).none { store.isLoaded(it.copy(layerId = copy.id)) }) {
+    // A copied background layer keeps its color as real pixels.
+    if (layer.isBackground && doc.backgroundColor != 0) {
         for (key in cellKeys(layer, includeMask = false)) {
             val dstKey = key.copy(layerId = copy.id)
             val filled = Bitmap.createBitmap(doc.width, doc.height, Bitmap.Config.ARGB_8888)
             filled.eraseColor(doc.backgroundColor)
+            store.get(dstKey)?.let { Canvas(filled).drawBitmap(it, 0f, 0f, null) }
             store.set(dstKey, filled)
             before[dstKey] = CellSnapshot.Empty
             after[dstKey] = snapshots.capture(dstKey)

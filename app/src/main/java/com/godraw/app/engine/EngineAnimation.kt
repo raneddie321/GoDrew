@@ -49,9 +49,8 @@ private fun DrawingEngine.copyCells(copies: List<Pair<String, String>>, before: 
     for ((srcFrame, dstFrame) in copies) {
         for (layer in animatedLayers()) {
             for (mask in listOf(false, true)) {
-                val src = store.get(CellKey(srcFrame, layer.id, mask)) ?: continue
                 val dstKey = CellKey(dstFrame, layer.id, mask)
-                store.set(dstKey, src.copy(Bitmap.Config.ARGB_8888, true))
+                if (!copyCell(CellKey(srcFrame, layer.id, mask), dstKey)) continue
                 before[dstKey] = CellSnapshot.Empty
                 after[dstKey] = snapshots.capture(dstKey)
             }

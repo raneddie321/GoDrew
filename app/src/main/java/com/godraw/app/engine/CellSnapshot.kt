@@ -30,7 +30,7 @@ sealed class CellSnapshot {
 class SnapshotManager(
     private val store: CellStore,
     private val undoDir: File,
-    private val cellFile: (CellKey) -> File,
+    val cellFile: (CellKey) -> File,
 ) {
     var memoryBudget: Long = 96L * 1024 * 1024
     private var usedInOperation = 0L

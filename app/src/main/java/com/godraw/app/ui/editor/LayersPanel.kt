@@ -284,7 +284,8 @@ private fun LayerRow(
                             val delta = (dragY / rowPx).roundToInt()
                             dragY = 0f
                             if (delta != 0) {
-                                val siblings = doc.layers.filter { it.parentId == layer.parentId }
+                                val current = engine.doc
+                                val siblings = current.layers.filter { it.parentId == current.layer(layer.id)?.parentId }
                                 val siblingIndex = siblings.indexOfFirst { it.id == layer.id }
                                 // Display is top-first, sibling indices count from the bottom.
                                 engine.moveLayer(layer.id, siblingIndex - delta)

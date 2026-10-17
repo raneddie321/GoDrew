@@ -771,7 +771,6 @@ class DrawingEngine(
                 }
                 if (maxX < 0) null else Rect(minX, minY, maxX + 1, maxY + 1)
             }
-            updateState { it.copy(busy = false) }
             if (result != null) {
                 val live = if (key.isMask) maskCell(key) else store.getOrCreate(key)
                 val before = PixelChangeCommand.crop(live, result)
@@ -781,6 +780,7 @@ class DrawingEngine(
                 bumpRevision()
                 invalidate()
             }
+            updateState { it.copy(busy = false) }
         }
     }
 
@@ -1219,6 +1219,11 @@ class DrawingEngine(
 
     // ------------------------------------------------------------------ saving
 
+    companion object {
+        /** Maximum bitmap bytes copied per save round; larger change sets save in several rounds. */
+        const val SAVE_BATCH_BYTES = 64L * 1024 * 1024
+    }
+
     data class SaveSnapshot(
         val doc: ProjectDocument,
         val cells: Map<CellKey, Bitmap?>,
@@ -1228,7 +1233,7 @@ class DrawingEngine(
 
     /** Captures everything needed to save in the background. */
     fun snapshotForSave(includeThumbnail: Boolean = true): SaveSnapshot {
-        val cells = store.snapshotChanges()
+        val cells = store.snapshotChanges(SAVE_BATCH_BYTES)
         val gens = store.generations(cells.keys)
         val thumb = if (includeThumbnail) renderThumbnail(512) else null
         return SaveSnapshot(doc, cells, gens, thumb)
@@ -1244,6 +1249,25 @@ class DrawingEngine(
         val w = max(1, (doc.width * scale).roundToInt())
         val h = max(1, (doc.height * scale).roundToInt())
         return compositor.renderBitmap(doc, frameIndex.coerceIn(0, doc.frames.lastIndex), cellSource, w, h)
+    }
+
+    /**
+     * Copies a cell to a new key. Clean cells are copied as files (fast, no decoding); cells with
+     * unsaved changes are copied in memory. Returns false when the source cell is empty.
+     */
+    internal fun copyCell(src: CellKey, dst: CellKey): Boolean {
+        if (store.isLoaded(src) && store.isDirty(src) || !snapshots.cellFile(src).exists()) {
+            val bmp = store.get(src) ?: return false
+            store.set(dst, bmp.copy(Bitmap.Config.ARGB_8888, true))
+            return true
+        }
+        if (store.isKnownEmpty(src)) return false
+        val target = snapshots.cellFile(dst)
+        return runCatching {
+            snapshots.cellFile(src).copyTo(target, overwrite = true)
+            store.forgetEmpty(dst)
+            true
+        }.getOrDefault(false)
     }
 
     fun release() {

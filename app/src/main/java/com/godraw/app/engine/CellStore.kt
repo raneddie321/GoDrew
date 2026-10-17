@@ -79,18 +79,33 @@ class CellStore(
     fun isKnownEmpty(key: CellKey): Boolean = key in knownEmpty || key in removed
 
     /**
-     * Copies every changed cell for saving. Values are independent copies (null = delete file),
-     * so drawing can continue while the save runs in the background.
+     * Copies changed cells for saving, up to [maxBytes] of bitmap data so a save never doubles
+     * memory use. Values are independent copies (null = delete file), so drawing can continue
+     * while the save runs in the background. Cells beyond the budget stay dirty for the next save.
      */
-    fun snapshotChanges(): Map<CellKey, Bitmap?> {
+    fun snapshotChanges(maxBytes: Long = Long.MAX_VALUE): Map<CellKey, Bitmap?> {
         val result = HashMap<CellKey, Bitmap?>()
+        var bytes = 0L
         for (key in dirty) {
             when {
                 key in removed -> result[key] = null
-                loaded[key] != null -> result[key] = loaded[key]!!.copy(Bitmap.Config.ARGB_8888, false)
+                loaded[key] != null -> {
+                    val bmp = loaded[key]!!
+                    if (bytes > 0 && bytes + bmp.allocationByteCount > maxBytes) continue
+                    bytes += bmp.allocationByteCount
+                    result[key] = bmp.copy(Bitmap.Config.ARGB_8888, false)
+                }
             }
         }
         return result
+    }
+
+    fun isDirty(key: CellKey): Boolean = key in dirty
+
+    /** Registers a cell whose file was written directly to disk (e.g. a copied file). */
+    fun forgetEmpty(key: CellKey) {
+        knownEmpty -= key
+        removed -= key
     }
 
     /** Marks the given cells as saved (unless they changed again since the snapshot). */

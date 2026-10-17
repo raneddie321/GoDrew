@@ -176,6 +176,14 @@ class EditorViewModel(
             try {
                 repo.save(snapshot.doc, snapshot.cells, snapshot.thumbnail)
                 e.onSaved(snapshot)
+                // Large change sets are written in bounded rounds to keep memory use flat.
+                var rounds = 0
+                while (e.store.hasUnsavedChanges && rounds++ < MAX_SAVE_ROUNDS) {
+                    val next = e.snapshotForSave(includeThumbnail = false)
+                    if (next.cells.isEmpty()) break
+                    repo.save(next.doc, next.cells, null)
+                    e.onSaved(next)
+                }
                 if (manual) _messages.tryEmit(EditorMessage.Saved)
             } catch (c: CancellationException) {
                 throw c
@@ -384,6 +392,10 @@ class EditorViewModel(
 
     fun resetExport() {
         if (exportJob?.isActive != true) exportState.value = ExportState.Idle
+    }
+
+    private companion object {
+        const val MAX_SAVE_ROUNDS = 200
     }
 
     override fun onCleared() {

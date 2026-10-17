@@ -110,11 +110,12 @@ class ProjectRepository(
         thumbnail: Bitmap?,
     ) = withContext(io) {
         lock(doc.id).withLock {
+            val startedAt = System.currentTimeMillis()
             cellsDir(doc.id).mkdirs()
             for ((key, bitmap) in changedCells) {
                 if (bitmap == null) File(cellsDir(doc.id), key.fileName).delete() else writeCell(doc.id, key, bitmap)
             }
-            removeOrphanCells(doc)
+            removeOrphanCells(doc, olderThan = startedAt - 2_000)
             AtomicFiles.writeText(manifest(doc.id), ProjectJson.encode(doc), keepBackup = true)
             var thumbVersion = dao.project(doc.id)?.thumbnailVersion ?: 0
             if (thumbnail != null) {
@@ -132,8 +133,12 @@ class ProjectRepository(
         }
     }
 
-    /** Deletes cell files of layers or frames that no longer exist in the document. */
-    private fun removeOrphanCells(doc: ProjectDocument) {
+    /**
+     * Deletes cell files of layers or frames that no longer exist in the document. Files written
+     * after [olderThan] are kept: they may belong to frames created while this save was running
+     * (cells spilled from memory), which the next save will cover.
+     */
+    private fun removeOrphanCells(doc: ProjectDocument, olderThan: Long = Long.MAX_VALUE) {
         val valid = HashSet<String>()
         for (layer in doc.layers) {
             if (layer.isGroup) continue
@@ -144,7 +149,7 @@ class ProjectRepository(
             }
         }
         cellsDir(doc.id).listFiles()?.forEach { f ->
-            if (f.name.endsWith(".png") && f.name !in valid) f.delete()
+            if (f.name.endsWith(".png") && f.name !in valid && f.lastModified() < olderThan) f.delete()
         }
     }
 

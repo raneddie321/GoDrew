@@ -235,7 +235,11 @@ fun TimelinePanel(vm: EditorViewModel, engine: DrawingEngine, st: EngineState, g
                                 .offset { IntOffset(dragX.roundToInt(), 0) }
                                 .pointerInput(frame.id, selectMode) {
                                     detectTapGestures(onTap = {
-                                        if (selectMode) vm.toggleFrameSelection(index) else engine.setActiveFrame(index)
+                                        // Resolve the index at tap time; frames may have moved since composition.
+                                        val current = engine.doc.frames.indexOfFirst { it.id == frame.id }
+                                        if (current >= 0) {
+                                            if (selectMode) vm.toggleFrameSelection(current) else engine.setActiveFrame(current)
+                                        }
                                     })
                                 }
                                 .pointerInput(frame.id) {
@@ -243,7 +247,8 @@ fun TimelinePanel(vm: EditorViewModel, engine: DrawingEngine, st: EngineState, g
                                         onDragEnd = {
                                             val delta = (dragX / itemPx).roundToInt()
                                             dragX = 0f
-                                            if (delta != 0) engine.moveFrames(listOf(index), index + delta)
+                                            val current = engine.doc.frames.indexOfFirst { it.id == frame.id }
+                                            if (delta != 0 && current >= 0) engine.moveFrames(listOf(current), current + delta)
                                         },
                                         onDragCancel = { dragX = 0f },
                                     ) { change, amount ->

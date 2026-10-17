@@ -36,7 +36,7 @@ jobs:
         run: ./gradlew :core:test --stacktrace
 
       - name: App unit tests (Robolectric)
-        run: ./gradlew :app:testDebugUnitTest --stacktrace
+        run: ./gradlew :app:testDebugUnitTest :app:testReleaseUnitTest --stacktrace
 
       - name: Build debug APK
         run: ./gradlew :app:assembleDebug --stacktrace
