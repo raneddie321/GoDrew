@@ -166,7 +166,8 @@ class ExportManager(
         if (!out.exists() || out.length() == 0L) throw ExportException(ExportError.UNKNOWN, "Output missing")
         val target = destination ?: insertIntoMediaStore(name, options.format)
         copyAndVerify(out, target)
-        val share = FileProvider.getUriForFile(context, context.packageName + ".fileprovider", out)
+        // Sharing is best-effort: the export already succeeded, so fall back to the saved file's URI.
+        val share = runCatching { FileProvider.getUriForFile(context, context.packageName + ".fileprovider", out) }.getOrNull() ?: target
         ExportState.Done(target, share, options.format.mime, name, out.length())
     }
 
