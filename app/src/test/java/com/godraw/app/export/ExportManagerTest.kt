@@ -26,7 +26,6 @@ import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
-import javax.imageio.ImageIO
 
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [34], application = Application::class)
@@ -92,10 +91,10 @@ class ExportManagerTest {
         var lastProgress = 0f
         manager(cells).export(doc, ExportOptions(ExportFormat.GIF, fps = 12), FeatureGate(Tier.FREE), Uri.fromFile(out)) { lastProgress = it }
         assertEquals(1f, lastProgress, 0.001f)
-        val reader = ImageIO.getImageReadersByFormatName("gif").next()
-        reader.input = ImageIO.createImageInputStream(out)
-        assertEquals(3, reader.getNumImages(true))
-        assertEquals(120, reader.read(0).width)
+        val bytes = out.readBytes()
+        assertEquals("GIF89a", String(bytes, 0, 6, Charsets.US_ASCII))
+        assertEquals(120, (bytes[6].toInt() and 0xFF) or ((bytes[7].toInt() and 0xFF) shl 8))
+        assertEquals(3, countGifFrames(bytes))
     }
 
     @Test
@@ -120,5 +119,37 @@ class ExportManagerTest {
         assertEquals(1920 to 1080, m.outputSize(big, ExportOptions(ExportFormat.PNG), FeatureGate(Tier.FREE)))
         assertEquals(2560 to 1440, m.outputSize(big, ExportOptions(ExportFormat.PNG), FeatureGate(Tier.PRO)))
         assertEquals(3840 to 2160, m.outputSize(big, ExportOptions(ExportFormat.PNG), FeatureGate(Tier.MAX)))
+    }
+
+    /** Walks GIF blocks and counts image descriptors. */
+    private fun countGifFrames(b: ByteArray): Int {
+        var i = 13
+        val flags = b[10].toInt() and 0xFF
+        if (flags and 0x80 != 0) i += 3 * (1 shl ((flags and 7) + 1))
+        var frames = 0
+        fun skipSubBlocks() {
+            while (true) {
+                val n = b[i].toInt() and 0xFF
+                i += 1
+                if (n == 0) return
+                i += n
+            }
+        }
+        while (i < b.size) {
+            when (b[i].toInt() and 0xFF) {
+                0x21 -> { i += 2; skipSubBlocks() }
+                0x2C -> {
+                    frames++
+                    val f = b[i + 9].toInt() and 0xFF
+                    i += 10
+                    if (f and 0x80 != 0) i += 3 * (1 shl ((f and 7) + 1))
+                    i += 1 // LZW minimum code size
+                    skipSubBlocks()
+                }
+                0x3B -> return frames
+                else -> error("Unexpected GIF block at $i")
+            }
+        }
+        return frames
     }
 }
