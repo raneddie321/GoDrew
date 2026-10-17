@@ -30,7 +30,7 @@ enum class EffectType(vararg val params: EffectParam) {
     MOTION_BLUR(EffectParam("distance", 2f, 80f, 16f), EffectParam("angle", 0f, 360f, 0f)),
     OUTLINE(EffectParam("width", 1f, 20f, 3f)),
     INNER_SHADOW(EffectParam("distance", 0f, 50f, 6f), EffectParam("blur", 0f, 30f, 6f)),
-    COLOR_BALANCE(EffectParam("red", -100f, 100f, 0f), EffectParam("blue", -100f, 100f, 0f)),
+    COLOR_BALANCE(EffectParam("red", -100f, 100f, 15f), EffectParam("blue", -100f, 100f, -10f)),
     EXPOSURE(EffectParam("stops", -3f, 3f, 0.5f)),
     TEMPERATURE(EffectParam("warmth", -100f, 100f, 25f)),
     DUOTONE(EffectParam("hue", 0f, 360f, 210f)),

@@ -83,16 +83,15 @@ object PcmMixer {
         return ShortArray(acc.size) { i -> softClip(acc[i]) }
     }
 
+    /** Leaves normal levels untouched and smoothly limits peaks above 90% full scale. */
     private fun softClip(v: Float): Short {
         val limit = 32767f
         val x = v / limit
-        val y = if (x > 1f || x < -1f) {
-            // tanh-style limiting only for overs, keeping normal levels untouched
+        val ax = kotlin.math.abs(x)
+        val y = if (ax <= 0.9f) x else {
             val s = if (x > 0) 1f else -1f
-            s * (1f - 1f / (1f + kotlin.math.abs(x)))
-                .let { 0.5f + it * 0.5f }
-                .coerceAtMost(1f)
-        } else x
+            s * (0.9f + 0.1f * kotlin.math.tanh((ax - 0.9f) / 0.1f))
+        }
         return (y * limit).roundToInt().coerceIn(-32768, 32767).toShort()
     }
 }

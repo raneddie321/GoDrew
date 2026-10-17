@@ -24,5 +24,5 @@ dependencies {
 
 tasks.test {
     // The localization test validates the Android string resources of the app module.
-    systemProperty("godraw.resDir", rootProject.file("app/src/main/res").absolutePath)
+    systemProperty("godraw.resDir", projectDir.resolve("../app/src/main/res").canonicalPath)
 }
