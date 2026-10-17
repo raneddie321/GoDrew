@@ -36,8 +36,8 @@ data class RecoveryReport(val removedTempFiles: Int, val reindexedProjects: Int,
  * Owns project storage. Each project is a directory under `files/projects/<id>/`:
  *
  *  project.json      document (written atomically, previous version kept as .bak)
- *  cells/*.png       one PNG per layer per frame (missing file = empty cell)
- *  audio/*           imported audio, copied in so projects stay self-contained
+ *  cells/            one PNG per layer per frame (missing file = empty cell)
+ *  audio/            imported audio, copied in so projects stay self-contained
  *  thumbnail.png     gallery preview
  *
  * Room mirrors the metadata for fast listing, searching and sorting.
