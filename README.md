@@ -152,8 +152,3 @@ and add it to the localization test.
 
 Artwork stays on the device unless the user exports or backs it up. No analytics, ads or
 tracking. Network use is limited to Google Play and the developer's verification server.
-
-## Prefly (web)
-
-The [`prefly/`](prefly/) directory contains **Prefly**, a separate Next.js web app for creating
-2D, 3D and multiplayer games by chatting with AI. See [`prefly/README.md`](prefly/README.md).
