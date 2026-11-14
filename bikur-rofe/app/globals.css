@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-assistant), var(--font-heebo), system-ui, sans-serif;
+  --font-display: var(--font-heebo), var(--font-assistant), system-ui, sans-serif;
+
+  --color-navy: #0a1931;
+  --color-navy-900: #071226;
+  --color-navy-800: #12264a;
+  --color-navy-700: #1b3462;
+  --color-brand: #008c47;
+  --color-brand-600: #007a3e;
+  --color-brand-700: #006633;
+  --color-brand-50: #e8f6ee;
+  --color-brand-100: #cfeedd;
+  --color-paper: #f8f9fa;
+  --color-card: #f1f3f6;
+  --color-line: #e3e7ed;
+  --color-muted: #55657d;
+  --color-danger: #c62f2f;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-navy);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-brand);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Native <details> used for FAQ */
+details > summary {
+  list-style: none;
+}
+details > summary::-webkit-details-marker {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
